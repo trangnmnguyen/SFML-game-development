@@ -1,4 +1,1 @@
-﻿  Zombie.cpp
-f:\stuff\my project\games\zombiearena\zombiearena\zombie.cpp(39): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
-f:\stuff\my project\games\zombiearena\zombiearena\zombie.cpp(94): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-  ZombieArena.vcxproj -> F:\Stuff\My Project\Games\ZombieArena\Debug\ZombieArena.exe
+﻿  ZombieArena.vcxproj -> F:\Stuff\SFML\ZombieArena\Debug\ZombieArena.exe
