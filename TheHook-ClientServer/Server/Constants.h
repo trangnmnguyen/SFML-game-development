@@ -1,6 +1,8 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
+#include <winsock.h>
+
 // Number of players connecting to server
 const int NUM_PLAYERS = 2;
 
@@ -15,5 +17,8 @@ const int SLEEP_TIME = 1000;
 
 // Length of message buffer used to store information received from clients
 const int MESSAGE_BUFFER_LENGTH = 512;
+
+// Timeout (in ms) to receive messages from each client
+const DWORD RECEIVE_TIMEOUT = 1000;
 
 #endif

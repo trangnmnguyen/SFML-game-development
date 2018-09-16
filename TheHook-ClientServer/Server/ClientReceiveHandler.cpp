@@ -10,7 +10,12 @@ void ClientReceiveHandler::operator()(std::mutex* mu, int clientId, sockaddr_in 
 			char messageBuffer[MESSAGE_BUFFER_LENGTH];
 			int receiveStatus = recv(clientSocket, messageBuffer, MESSAGE_BUFFER_LENGTH, 0);
 			if(receiveStatus == SOCKET_ERROR) {
-				throw ReceivingError(INVALID_SOCKET);
+				if(WSAGetLastError() == WSAETIMEDOUT) {
+					continue;
+				}
+				else {
+					throw ReceivingError(INVALID_SOCKET);
+				}
 			}
 			messageBuffer[receiveStatus] = '\0';
 			mu->lock();
@@ -29,6 +34,7 @@ void ClientReceiveHandler::operator()(std::mutex* mu, int clientId, sockaddr_in 
 				mu->unlock();
 			}
 		}
+
 		catch(std::exception& e) {
 			mu->lock();
 			std::cerr << e.what() << std::endl;

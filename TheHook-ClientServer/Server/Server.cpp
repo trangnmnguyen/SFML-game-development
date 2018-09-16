@@ -2,6 +2,7 @@
 
 void Server::startServer(int serverPort, Game* game) const {
 	try {
+
 		// Initialize winsock
 		std::cout << "Initizlizing winsock..." << std::endl;
 		WSADATA wsa;
@@ -55,6 +56,8 @@ void Server::startServer(int serverPort, Game* game) const {
 			if(clientSocket[clientId] == INVALID_SOCKET) {
 				throw ClientSocketConnectingError(serverSocket);
 			}
+			DWORD receiveTimeout = RECEIVE_TIMEOUT;
+			setsockopt(clientSocket[clientId], SOL_SOCKET, SO_RCVTIMEO, (char*)&receiveTimeout, sizeof(receiveTimeout));
 			std::cout << "Client #" << clientId << " connected" << std::endl;
 			clientId++;
 		}
