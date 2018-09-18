@@ -1,20 +1,19 @@
-#ifndef SERVER_H
-#define SERVER_H
+#ifndef CLIENT_H
+#define CLIENT_H
 
 #include "Game.h"
 #include "Exceptions.h"
 #include "Constants.h"
 #include "ClientReceiveHandler.h"
 #include "ClientSendHandler.h"
-#include "GameLogicHandler.h"
 #include <winsock.h>
 #include <iostream>
 #include <thread>
 #include <mutex>
 
-class Server {
+class Client {
 public:
-	void startServer(int serverPort, Game* game) const;
+	void startClient(unsigned long serverIp, int serverPort, Game* game) const;
 };
 
 #endif

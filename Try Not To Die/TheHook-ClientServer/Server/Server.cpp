@@ -22,7 +22,7 @@ void Server::startServer(int serverPort, Game* game) const {
 		std::cout << "Creating server socket..." << std::endl;
 		SOCKET serverSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 		if(serverSocket == INVALID_SOCKET) {
-			throw ServerSocketCreatingError(serverSocket);
+			throw SocketCreatingError(serverSocket);
 		}
 		std::cout << "Creating server socket done" << std::endl;
 		std::cout << std::endl;
@@ -54,10 +54,9 @@ void Server::startServer(int serverPort, Game* game) const {
 			clientAddressLength[clientId] = sizeof(clientAddress[clientId]);
 			clientSocket[clientId] = accept(serverSocket, (sockaddr*)&clientAddress[clientId], &clientAddressLength[clientId]);
 			if(clientSocket[clientId] == INVALID_SOCKET) {
-				throw ClientSocketConnectingError(serverSocket);
+				throw AcceptingError(serverSocket);
 			}
-			DWORD receiveTimeout = RECEIVE_TIMEOUT;
-			setsockopt(clientSocket[clientId], SOL_SOCKET, SO_RCVTIMEO, (char*)&receiveTimeout, sizeof(receiveTimeout));
+			setsockopt(clientSocket[clientId], SOL_SOCKET, SO_RCVTIMEO, (const char*)&RECEIVE_TIMEOUT, sizeof(RECEIVE_TIMEOUT));
 			std::cout << "Client #" << clientId << " connected" << std::endl;
 			clientId++;
 		}
@@ -67,62 +66,64 @@ void Server::startServer(int serverPort, Game* game) const {
 		std::mutex* mu = new std::mutex();
 
 		// With each client, create a thread to receive messages
-		ClientReceiveHandler* clientReceiveHandler[NUM_PLAYERS];
-		std::thread* clientReceiveHandlerThread[NUM_PLAYERS];
+		ServerReceiveHandler* serverReceiveHandler[NUM_PLAYERS];
+		std::thread* serverReceiveHandlerThread[NUM_PLAYERS];
 		for(clientId = 0; clientId < NUM_PLAYERS; clientId++) {
-			clientReceiveHandler[clientId] = new ClientReceiveHandler();
-			clientReceiveHandlerThread[clientId] = new std::thread(*clientReceiveHandler[clientId], mu, clientId, clientAddress[clientId], clientAddressLength[clientId], clientSocket[clientId], game);
+			serverReceiveHandler[clientId] = new ServerReceiveHandler();
+			serverReceiveHandlerThread[clientId] = new std::thread(*serverReceiveHandler[clientId], mu, clientId, clientSocket[clientId], game);
 		}
 
 		// With each client, create a thread to send messsages
-		ClientSendHandler* clientSendHandler[NUM_PLAYERS];
-		std::thread* clientSendHandlerThread[NUM_PLAYERS];
+		ServerSendHandler* serverSendHandler[NUM_PLAYERS];
+		std::thread* serverSendHandlerThread[NUM_PLAYERS];
 		for(clientId = 0; clientId < NUM_PLAYERS; clientId++) {
-			clientSendHandler[clientId] = new ClientSendHandler();
-			clientSendHandlerThread[clientId] = new std::thread(*clientSendHandler[clientId], mu, clientId, clientAddress[clientId], clientAddressLength[clientId], clientSocket[clientId], game);
+			serverSendHandler[clientId] = new ServerSendHandler();
+			serverSendHandlerThread[clientId] = new std::thread(*serverSendHandler[clientId], mu, clientId, clientSocket[clientId], game);
 		}
 
-		// Create a thread to process game logic
-		GameLogicHandler* gameLogicHandler = new GameLogicHandler();
-		std::thread* gameLogicHandlerThread = new std::thread(*gameLogicHandler, mu, game);
+		// Create a thread to process server logic
+		ServerLogicHandler* serverLogicHandler = new ServerLogicHandler();
+		std::thread* serverLogicHandlerThread = new std::thread(*serverLogicHandler, mu, game);
 
 		// Wait for all threads to finish
 		for(clientId = 0; clientId < NUM_PLAYERS; clientId++) {
-			if(clientReceiveHandlerThread[clientId]->joinable()) {
-				clientReceiveHandlerThread[clientId]->join();
+			if(serverReceiveHandlerThread[clientId]->joinable()) {
+				serverReceiveHandlerThread[clientId]->join();
 			}
-			if(clientSendHandlerThread[clientId]->joinable()) {
-				clientSendHandlerThread[clientId]->join();
+			if(serverSendHandlerThread[clientId]->joinable()) {
+				serverSendHandlerThread[clientId]->join();
 			}
 		}
-		if(gameLogicHandlerThread->joinable()) {
-			gameLogicHandlerThread->join();
+		if(serverLogicHandlerThread->joinable()) {
+			serverLogicHandlerThread->join();
 		}
 
 		// Delete mutex, handlers, and threads
 		delete mu;
 		for(clientId = 0; clientId < NUM_PLAYERS; clientId++) {
-			delete clientReceiveHandler[clientId];
-			delete clientReceiveHandlerThread[clientId];
-			delete clientSendHandler[clientId];
-			delete clientSendHandlerThread[clientId];
+			delete serverReceiveHandler[clientId];
+			delete serverReceiveHandlerThread[clientId];
+			delete serverSendHandler[clientId];
+			delete serverSendHandlerThread[clientId];
 		}
-		delete gameLogicHandler;
-		delete gameLogicHandlerThread;
+		delete serverLogicHandler;
+		delete serverLogicHandlerThread;
 
 		// Close server socket and clean up winsock
 		closesocket(serverSocket);
 		WSACleanup();
 	}
 
-	catch(ServerError& e) {
+	catch(SocketError& e) {
 		std::cerr << e.what() << std::endl;
-		if(e.getServerSocket() != INVALID_SOCKET) {
-			closesocket(e.getServerSocket());
+		if(e.getSocket() != INVALID_SOCKET) {
+			closesocket(e.getSocket());
 		}
+		WSACleanup();
 	}
 
 	catch(std::exception& e) {
 		std::cerr << e.what() << std::endl;
+		WSACleanup();
 	}
 }

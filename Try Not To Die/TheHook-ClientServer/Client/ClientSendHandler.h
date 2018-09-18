@@ -9,7 +9,7 @@
 
 class ClientSendHandler {
 public:
-	void operator()(std::mutex* mu, int clientId, sockaddr_in clientAddress, int clientAddressLength, SOCKET clientSocket, Game* game) const;
+	void operator()(std::mutex* mu, SOCKET clientSocket, Game* game) const;
 };
 
 #endif

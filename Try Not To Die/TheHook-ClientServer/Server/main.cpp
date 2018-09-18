@@ -3,6 +3,7 @@
 #include "Exceptions.h"
 
 int main(int argc, char** argv) {
+	
 	// Read arguments
 	int serverPort;
 	try {

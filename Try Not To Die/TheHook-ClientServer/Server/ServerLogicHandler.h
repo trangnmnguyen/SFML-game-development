@@ -1,5 +1,5 @@
-#ifndef GAME_LOGIC_HANDLER_H
-#define GAME_LOGIC_HANDLER_H
+#ifndef SERVER_LOGIC_HANDLER_H
+#define SERVER_LOGIC_HANDLER_H
 
 #include "Game.h"
 #include "GameState.h"
@@ -9,7 +9,7 @@
 #include <chrono>
 #include <iostream>
 
-class GameLogicHandler {
+class ServerLogicHandler {
 public:
 	void operator()(std::mutex* mu, Game* game) const;
 };
